@@ -38,4 +38,13 @@ class StreamTests extends CatsSuite {
       }
     }
   }
+
+  test("Foldable[Stream].foldRight is stack-safe for long streams"){
+    val s: Stream[Boolean] = Stream.fill(100000)(true) ++ Stream.continually(false)
+
+    val x = Foldable[Stream].foldRight(s, Eval.now(true))((a,b) =>
+      if (a) b else Eval.now(false))
+
+    x.value should === (false)
+  }
 }
