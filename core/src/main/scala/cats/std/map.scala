@@ -16,7 +16,7 @@ trait MapInstances extends cats.kernel.std.MapInstances {
 
       def traverse[G[_], A, B](fa: Map[K, A])(f: (A) => G[B])(implicit G: Applicative[G]): G[Map[K, B]] = {
         val gba: Eval[G[Map[K, B]]] = Always(G.pure(Map.empty))
-        val gbb = Foldable.iterateRight(fa.iterator, gba){ (kv, lbuf) =>
+        val gbb = Foldable.FromIterator.foldRight(fa.iterator, gba){ (kv, lbuf) =>
           G.map2Eval(f(kv._2), lbuf)({ (b, buf) => buf + (kv._1 -> b)})
         }.value
         G.map(gbb)(_.toMap)
@@ -43,7 +43,10 @@ trait MapInstances extends cats.kernel.std.MapInstances {
         fa.foldLeft(b) { case (x, (k, a)) => f(x, a)}
 
       def foldRight[A, B](fa: Map[K, A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
-        Foldable.iterateRight(fa.values.iterator, lb)(f)
+        Foldable.FromIterator.foldRight(fa.values.iterator, lb)(f)
+
+      override def foldM[G[_], A, B](fa: Map[K, A], z: B)(f: (B, A) => G[B])(implicit G: Monad[G]): G[B] =
+        Foldable.FromIterator.foldM(fa.values.iterator, z)(f)
 
       override def isEmpty[A](fa: Map[K, A]): Boolean = fa.isEmpty
     }

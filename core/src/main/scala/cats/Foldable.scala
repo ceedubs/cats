@@ -301,9 +301,22 @@ trait CompositeFoldable[F[_], G[_]] extends Foldable[λ[α => F[G[α]]]] {
 }
 
 object Foldable {
-  def iterateRight[A, B](it: Iterator[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = {
-    def loop(): Eval[B] =
-      Eval.defer(if (it.hasNext) f(it.next, loop()) else lb)
-    loop()
+
+  /**
+   * TODO ceedumbs
+   */
+  object FromIterator {
+    def foldRight[A, B](it: Iterator[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] = {
+      def loop(): Eval[B] =
+        Eval.defer(if (it.hasNext) f(it.next, loop()) else lb)
+      loop()
+    }
+
+    def foldM[G[_], A, B](it: Iterator[A], z: B)(f: (B, A) => G[B])(implicit G: Monad[G]): G[B] = {
+      def loop(z: B): Eval[G[B]] =
+        if (it.hasNext) Eval.defer(G.flatMapEval(f(z, it.next))(loop))
+        else Always(G.pure(z))
+      loop(z).value
+    }
   }
 }

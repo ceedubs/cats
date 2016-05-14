@@ -18,6 +18,12 @@ trait OptionInstances extends cats.kernel.std.OptionInstances {
       def flatMap[A, B](fa: Option[A])(f: A => Option[B]): Option[B] =
         fa.flatMap(f)
 
+      override def flatMapEval[A, B](fa: Option[A])(f: A => Eval[Option[B]]): Eval[Option[B]] =
+        fa match {
+          case None => Now(None)
+          case Some(a) => f(a)
+        }
+
       override def map2[A, B, Z](fa: Option[A], fb: Option[B])(f: (A, B) => Z): Option[Z] =
         fa.flatMap(a => fb.map(b => f(a, b)))
 

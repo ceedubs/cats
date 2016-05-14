@@ -20,6 +20,10 @@ import simulacrum.typeclass
 @typeclass trait FlatMap[F[_]] extends Apply[F] {
   def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
 
+  def flatMapEval[A, B](fa: F[A])(f: A => Eval[F[B]]): Eval[F[B]] =
+    // TODO ceedumbs reconsider
+    Later(flatMap(fa)(a => f(a).value))
+
   /**
    * also commonly called join
    */

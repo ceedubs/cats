@@ -52,6 +52,9 @@ trait ListInstances extends cats.kernel.std.ListInstances {
           G.map2Eval(f(a), lglb)(_ :: _)
         }.value
 
+      override def foldM[G[_], A, B](fa: List[A], z: B)(f: (B, A) => G[B])(implicit G: Monad[G]): G[B] =
+        Foldable.FromIterator.foldM(fa.iterator, z)(f)
+
       override def exists[A](fa: List[A])(p: A => Boolean): Boolean =
         fa.exists(p)
 

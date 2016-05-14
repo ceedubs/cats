@@ -44,6 +44,9 @@ trait VectorInstances extends cats.kernel.std.VectorInstances {
         Eval.defer(loop(0))
       }
 
+      override def foldM[G[_], A, B](fa: Vector[A], z: B)(f: (B, A) => G[B])(implicit G: Monad[G]): G[B] =
+        Foldable.FromIterator.foldM(fa.iterator, z)(f)
+
       def traverse[G[_], A, B](fa: Vector[A])(f: A => G[B])(implicit G: Applicative[G]): G[Vector[B]] =
       foldRight[A, G[Vector[B]]](fa, Always(G.pure(Vector.empty))){ (a, lgvb) =>
         G.map2Eval(f(a), lgvb)(_ +: _)

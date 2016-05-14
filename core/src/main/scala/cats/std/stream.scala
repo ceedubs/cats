@@ -35,6 +35,9 @@ trait StreamInstances extends cats.kernel.std.StreamInstances {
           if (s.isEmpty) lb else f(s.head, Eval.defer(foldRight(s.tail, lb)(f)))
         }
 
+      override def foldM[G[_], A, B](fa: Stream[A], z: B)(f: (B, A) => G[B])(implicit G: Monad[G]): G[B] =
+        Foldable.FromIterator.foldM(fa.iterator, z)(f)
+
       def traverse[G[_], A, B](fa: Stream[A])(f: A => G[B])(implicit G: Applicative[G]): G[Stream[B]] = {
         def init: G[Stream[B]] = G.pure(Stream.empty[B])
 
