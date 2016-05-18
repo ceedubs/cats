@@ -75,6 +75,9 @@ trait ListInstances extends cats.kernel.std.ListInstances {
         fa.forall(p)
 
       override def isEmpty[A](fa: List[A]): Boolean = fa.isEmpty
+
+      override def foldMRec[G[_], A, B](fa: List[A], z: B)(f: (B, A) => G[B])(implicit G: MonadRec[G]): G[B] =
+        Foldable.iterableFoldMRec(fa, z)(f)
     }
 
   implicit def listShow[A:Show]: Show[List[A]] =

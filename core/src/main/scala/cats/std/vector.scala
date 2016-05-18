@@ -53,6 +53,9 @@ trait VectorInstances extends cats.kernel.std.VectorInstances {
         fa.exists(p)
 
       override def isEmpty[A](fa: Vector[A]): Boolean = fa.isEmpty
+
+      override def foldMRec[G[_], A, B](fa: Vector[A], z: B)(f: (B, A) => G[B])(implicit G: MonadRec[G]): G[B] =
+        Foldable.iterableFoldMRec(fa, z)(f)
     }
 
   implicit def vectorShow[A:Show]: Show[Vector[A]] =

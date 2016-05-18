@@ -46,5 +46,8 @@ trait MapInstances extends cats.kernel.std.MapInstances {
         Foldable.iterateRight(fa.values.iterator, lb)(f)
 
       override def isEmpty[A](fa: Map[K, A]): Boolean = fa.isEmpty
+
+      override def foldMRec[G[_], A, B](fa: Map[K, A], z: B)(f: (B, A) => G[B])(implicit G: MonadRec[G]): G[B] =
+        Foldable.iterableFoldMRec(fa.values, z)(f)
     }
 }

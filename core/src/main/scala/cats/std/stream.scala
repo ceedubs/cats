@@ -53,6 +53,9 @@ trait StreamInstances extends cats.kernel.std.StreamInstances {
         fa.forall(p)
 
       override def isEmpty[A](fa: Stream[A]): Boolean = fa.isEmpty
+
+      override def foldMRec[G[_], A, B](fa: Stream[A], z: B)(f: (B, A) => G[B])(implicit G: MonadRec[G]): G[B] =
+        Foldable.iterableFoldMRec(fa, z)(f)
     }
 
   implicit def streamShow[A: Show]: Show[Stream[A]] =
