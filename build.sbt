@@ -102,12 +102,15 @@ lazy val includeGeneratedSrc: Setting[_] = {
 lazy val catsSettings = commonSettings ++ publishSettings ++ scoverageSettings ++ javadocSettings
 
 lazy val scalaCheckVersion = "1.13.5"
-lazy val scalaTestVersion = "3.0.5"
 lazy val disciplineVersion = "0.9.0"
 lazy val catalystsVersion = "0.6"
 
-// 2.13.0-M3 workaround
-val scalatest_2_13 = "3.0.5-M1"
+def scalatestVersion(scalaVersion: String): String =
+  CrossVersion.partialVersion(scalaVersion) match {
+    // 2.13.0-M3 workaround
+    case Some((2, 13)) =>  "3.0.5-M1"
+    case _ => "3.0.5"
+  }
 
 lazy val disciplineDependencies = Seq(
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion,
@@ -116,16 +119,7 @@ lazy val disciplineDependencies = Seq(
 lazy val testingDependencies = Seq(
   libraryDependencies += "org.typelevel" %%% "catalysts-platform" % catalystsVersion,
   libraryDependencies += "org.typelevel" %%% "catalysts-macros" % catalystsVersion % "test",
-  // 2.13.0-M3 workaround
-  // libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
-  libraryDependencies += {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        "org.scalatest" %%% "scalatest" % scalatest_2_13 % "test"
-      case _ =>
-       "org.scalatest" %%% "scalatest" % scalaTestVersion % "test"
-    }}
-    )
+  libraryDependencies += "org.scalatest" %%% "scalatest" % scalatestVersion(scalaVersion.value) % "test")
 
 /**
   * Remove 2.10 projects from doc generation, as the macros used in the projects
@@ -346,16 +340,7 @@ lazy val testkit = crossProject.crossType(CrossType.Pure)
   .settings(moduleName := "cats-testkit")
   .settings(catsSettings)
   .settings(disciplineDependencies)
-  // 2.13.0-M3 workaround
-  //.settings(libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion)
-  .settings(libraryDependencies += {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) =>
-        "org.scalatest" %%% "scalatest" % scalatest_2_13
-      case _ =>
-       "org.scalatest" %%% "scalatest" % scalaTestVersion
-    }}
-  )
+  .settings(libraryDependencies += "org.scalatest" %%% "scalatest" % scalatestVersion(scalaVersion.value))
   .jsSettings(commonJsSettings)
   .jvmSettings(commonJvmSettings)
 
