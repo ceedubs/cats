@@ -21,7 +21,7 @@ object eq {
    * and comparing the application of the two functions.
    */
   implicit def catsLawsEqForFn1[A, B](implicit A: Arbitrary[A], B: Eq[B]): Eq[A => B] = new Eq[A => B] {
-    val sampleCnt: Int = if (Platform.isJvm) 50 else 30
+    val sampleCnt: Int = if (Platform.isJvm) 10 else 5
 
     def eqv(f: A => B, g: A => B): Boolean = {
       val samples = List.fill(sampleCnt)(A.arbitrary.sample).collect {
@@ -42,7 +42,7 @@ object eq {
    */
   implicit def catsLawsEqForFn2[A, B, C](implicit A: Arbitrary[A], B: Arbitrary[B], C: Eq[C]): Eq[(A, B) => C] =
     new Eq[(A, B) => C] {
-      val sampleCnt: Int = if (Platform.isJvm) 50 else 5
+      val sampleCnt: Int = if (Platform.isJvm) 10 else 5
 
       def eqv(f: (A, B) => C, g: (A, B) => C): Boolean = {
         val samples = List.fill(sampleCnt)((A.arbitrary.sample, B.arbitrary.sample)).collect {
@@ -77,32 +77,32 @@ object eq {
     }
 
   implicit def catsLawsEqForEq[A](implicit arbA: Arbitrary[(A, A)]): Eq[Eq[A]] =
-    sampledEq[Eq[A], (A, A), Boolean](100) { case (e, (l, r)) => e.eqv(l, r) }
+    sampledEq[Eq[A], (A, A), Boolean](10) { case (e, (l, r)) => e.eqv(l, r) }
 
   implicit def catsLawsEqForEquiv[A](implicit arbA: Arbitrary[(A, A)]): Eq[Equiv[A]] =
-    sampledEq[Equiv[A], (A, A), Boolean](100) { case (e, (l, r)) => e.equiv(l, r) }
+    sampledEq[Equiv[A], (A, A), Boolean](10) { case (e, (l, r)) => e.equiv(l, r) }
 
   implicit def catsLawsEqForPartialOrder[A](implicit arbA: Arbitrary[(A, A)],
                                             optIntEq: Eq[Option[Int]]): Eq[PartialOrder[A]] =
-    sampledEq[PartialOrder[A], (A, A), Option[Int]](100) { case (p, (l, r)) => p.tryCompare(l, r) }
+    sampledEq[PartialOrder[A], (A, A), Option[Int]](10) { case (p, (l, r)) => p.tryCompare(l, r) }
 
   implicit def catsLawsEqForPartialOrdering[A](implicit arbA: Arbitrary[(A, A)],
                                                optIntEq: Eq[Option[Int]]): Eq[PartialOrdering[A]] =
-    sampledEq[PartialOrdering[A], (A, A), Option[Int]](100) { case (p, (l, r)) => p.tryCompare(l, r) }
+    sampledEq[PartialOrdering[A], (A, A), Option[Int]](10) { case (p, (l, r)) => p.tryCompare(l, r) }
 
   implicit def catsLawsEqForOrder[A](implicit arbA: Arbitrary[(A, A)]): Eq[Order[A]] =
-    sampledEq[Order[A], (A, A), Int](100) { case (p, (l, r)) => p.compare(l, r) }
+    sampledEq[Order[A], (A, A), Int](10) { case (p, (l, r)) => p.compare(l, r) }
 
   implicit def catsLawsEqForOrdering[A](implicit arbA: Arbitrary[(A, A)]): Eq[Ordering[A]] =
-    sampledEq[Ordering[A], (A, A), Int](100) { case (p, (l, r)) => p.compare(l, r) }
+    sampledEq[Ordering[A], (A, A), Int](10) { case (p, (l, r)) => p.compare(l, r) }
 
   /**
-   * Creates an approximation of Eq[Hash[A]] by generating 100 values for A
+   * Creates an approximation of Eq[Hash[A]] by generating 10 values for A
    * and comparing the application of the two hash functions.
    */
   implicit def catsLawsEqForHash[A](implicit arbA: Arbitrary[A]): Eq[Hash[A]] = new Eq[Hash[A]] {
     def eqv(f: Hash[A], g: Hash[A]): Boolean = {
-      val samples = List.fill(100)(arbA.arbitrary.sample).collect {
+      val samples = List.fill(10)(arbA.arbitrary.sample).collect {
         case Some(a) => a
         case None    => sys.error("Could not generate arbitrary values to compare two Hash[A]")
       }
