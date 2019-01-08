@@ -186,4 +186,18 @@ class ChainSuite extends CatsSuite {
       a.distinct.toList should ===(a.toList.distinct)
     }
   }
+
+  test("=== is consistent with == (issue #2540)") {
+    (Chain.one(1) |+| Chain.one(2) |+| Chain.one(3)) should be (Chain.fromSeq(List(1, 2, 3)))
+
+    forAll { (a: Chain[Int], b: Chain[Int]) =>
+      (a === b) should ===(a == b)
+    }
+  }
+
+  test("== returns false for non-Chains") {
+    forAll { (a: Chain[Int], b: Int) =>
+      (a == b) should ===(false)
+    }
+  }
 }

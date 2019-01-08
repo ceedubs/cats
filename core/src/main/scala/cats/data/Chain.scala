@@ -395,6 +395,13 @@ sealed abstract class Chain[+A] {
   }
 
   override def toString: String = show(Show.show[A](_.toString))
+
+  // TODO ceedubs override hashCode
+  override def equals(o: Any): Boolean = {
+    if (o.isInstanceOf[Chain[_]])
+      (this: Chain[Any]).===(o.asInstanceOf[Chain[Any]])(Eq.fromUniversalEquals[Any])
+    else false
+  }
 }
 
 object Chain extends ChainInstances {
