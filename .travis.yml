@@ -9,20 +9,48 @@ group: edge
 git:
   depth: 9999
 
-scala:
-  - 2.11.12
-  - 2.13.0-M5
-  - 2.12.7
-
 jdk:
   - oraclejdk8
 
 before_install:
  - export PATH=${PATH}:./vendor/bundle
 
-script:
-  - scripts/travis-publish.sh
+stages:
+  - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
 
+# TODO ceedubs see if we can avoid repeating the version numbers in so many places
+# TODO ceedubs why isn't bench/test part of buildJVM?
+jobs:
+  include:
+    - env: TEST="docs"
+      script: sbt makeMicrosite
+    - env: TEST="linting"
+      script: sbt scalastyle fmtCheck
+    - env:
+        - TEST="binary compatibility 2.11" SCALA_VERSION="2.11.12"
+        - TEST="binary compatibility 2.12" SCALA_VERSION="2.12.7"
+      script: sbt ++$SCALA_VERSION validateBC
+    - env:
+        - TEST="scalafix 2.11" SCALA_VERSION="2.11.12"
+        - TEST="scalafix 2.12" SCALA_VERSION="2.12.7"
+      script: cd scalafix && sbt ++$SCALA_VERSION tests/test
+    - env:
+        - TEST="JVM tests 2.11" SCALA_VERSION="2.11.12"
+        - TEST="JVM tests 2.12" SCALA_VERSION="2.12.7"
+        - TEST="JVM tests 2.13" SCALA_VERSION="2.13.0-M5"
+      script: sbt ++$SCALA_VERSION buildJVM bench/test
+    - env:
+        - TEST="JS tests 2.11" SCALA_VERSION="2.11.12"
+        - TEST="JS tests 2.12" SCALA_VERSION="2.12.7"
+      script: sbt ++$SCALA_VERSION validateJS && sbt ++$SCALA_VERSION validateKernelJS && sbt ++$SCALA_VERSION validateFreeJS
+    - env: TEST="coverage"
+      script: sbt coverage buildJVM bench/test coverageReport && codecov
+    - stage: release
+      script: echo "this is where I would release"
+
+# TODO ceedubs can some of these installations be changed to only be on the jobs that need them?
 # http://austinpray.com/ops/2015/09/20/change-travis-node-version.html
 install:
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
@@ -38,9 +66,6 @@ notifications:
     on_start: false
 
 env:
-  matrix:
-    - JS_BUILD=false
-    - JS_BUILD=true
   global:
     - secure: Kf44XQFpq2QGe3rn98Dsf5Uz3WXzPDralS54co7sqT5oQGs1mYLYZRYz+I75ZSo5ffZ86H7M+AI9YFofqGwAjBixBbqf1tGkUh3oZp2fN3QfqzazGV3HzC+o41zALG5FL+UBaURev9ChQ5fYeTtFB7YAzejHz4y5E97awk934Rg=
     - secure: QbNAu0jCaKrwjJi7KZtYEBA/pYbTJ91Y1x/eLAJpsamswVOvwnThA/TLYuux+oiZQCiDUpBzP3oxksIrEEUAhl0lMtqRFY3MrcUr+si9NIjX8hmoFwkvZ5o1b7pmLF6Vz3rQeP/EWMLcljLzEwsrRXeK0Ei2E4vFpsg8yz1YXJg=
