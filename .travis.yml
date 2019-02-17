@@ -52,6 +52,8 @@ jobs:
       scala: *scala_version_212
     - <<: *jvm_tests
       scala: *scala_version_213
+      # the bench module has dependencies not available in Scala 2.13, so don't test it
+      script: sbt ++$TRAVIS_SCALA_VERSION! buildJVM
 
     - &js_tests
       env: TEST="JS tests"
