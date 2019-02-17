@@ -21,10 +21,10 @@ before_install:
 
 stages:
   - name: test
-  - name: release
-    if: (branch = master AND type = push) OR (tag IS present)
+  - name: publish snapshot
+    # TODO ceedubs
+    #if: (branch = master AND type = push)
 
-# TODO ceedubs why isn't bench/test part of buildJVM?
 jobs:
   include:
     - env: TEST="linting"
@@ -40,36 +40,48 @@ jobs:
     - <<: *bincompat_check
       scala: *scala_version_212
 
-    - env: TEST="docs"
-      install: gem install jekyll -v 2.5
-      script: sbt makeMicrosite
+      # TODO ceedubs
+      #- env: TEST="docs"
+      #- install: gem install jekyll -v 2.5
+      #- script: sbt makeMicrosite
 
-    - &jvm_tests
-      env: TEST="JVM tests"
-      script: sbt ++$TRAVIS_SCALA_VERSION! buildJVM bench/test
+    - #- &jvm_tests
+      #- env: TEST="JVM tests"
+      #- script: sbt ++$TRAVIS_SCALA_VERSION! buildJVM bench/test
+      #- scala: *scala_version_211
+    - #- <<: *jvm_tests
+      #- scala: *scala_version_212
+    - #- <<: *jvm_tests
+      #- scala: *scala_version_213
+      #- # the bench module has dependencies not available in Scala 2.13, so don't test it
+      #- script: sbt ++$TRAVIS_SCALA_VERSION! buildJVM
+
+    - #- &js_tests
+      #- env: TEST="JS tests"
+      #- # http://austinpray.com/ops/2015/09/20/change-travis-node-version.html
+      #- install: rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
+      #- script: sbt ++$TRAVIS_SCALA_VERSION! validateJS && sbt ++$TRAVIS_SCALA_VERSION! validateKernelJS && sbt ++$TRAVIS_SCALA_VERSION! validateFreeJS
+      #- scala: *scala_version_211
+    - #- <<: *js_tests
+      #- scala: *scala_version_212
+
+    - #- env: TEST="coverage"
+      #- install: pip install --user codecov
+      #- script: sbt coverage buildJVM bench/test coverageReport && codecov
+
+    - &publish_snapshot
+      stage: publish snapshot
+      script: |
+        if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+          echo I would publish a snapshot here for version $TRAVIS_SCALA_VERSION
+        else
+          echo Not publishing a snapshot because the version does not end with -SNAPSHOT for version $TRAVIS_SCALA_VERSION
+        fi
       scala: *scala_version_211
-    - <<: *jvm_tests
+    - <<: *publish_snapshot
       scala: *scala_version_212
-    - <<: *jvm_tests
+    - <<: *publish_snapshot
       scala: *scala_version_213
-      # the bench module has dependencies not available in Scala 2.13, so don't test it
-      script: sbt ++$TRAVIS_SCALA_VERSION! buildJVM
-
-    - &js_tests
-      env: TEST="JS tests"
-      # http://austinpray.com/ops/2015/09/20/change-travis-node-version.html
-      install: rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
-      script: sbt ++$TRAVIS_SCALA_VERSION! validateJS && sbt ++$TRAVIS_SCALA_VERSION! validateKernelJS && sbt ++$TRAVIS_SCALA_VERSION! validateFreeJS
-      scala: *scala_version_211
-    - <<: *js_tests
-      scala: *scala_version_212
-
-    - env: TEST="coverage"
-      install: pip install --user codecov
-      script: sbt coverage buildJVM bench/test coverageReport && codecov
-
-    - stage: release
-      script: echo "this is where I would release"
 
 notifications:
   webhooks:
